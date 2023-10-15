@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { getAuth, createUserWithEmailAndPassword ,signInWithEmailAndPassword ,GoogleAuthProvider ,signInWithPopup } from "firebase/auth";
-import { getDatabase, ref, set } from "firebase/database";
+import React, { useEffect, useState } from "react";
+import { getAuth, createUserWithEmailAndPassword ,signInWithEmailAndPassword ,GoogleAuthProvider ,signInWithPopup,onAuthStateChanged, signOut } from "firebase/auth";
+import { getDatabase, ref, set ,get,child,onValue } from "firebase/database";
 import { app } from "./Firebase";
+import GoogleFuncs from "./GoogleFuncs";
+import FireStore from "./FireStore";
 const db = getDatabase(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
@@ -52,6 +54,23 @@ const App = () => {
         console.error("Error setting data:", error);
       });
   };
+  const getData = ()=>{
+    const data = get(child(ref(db),"users")).then((d)=>{
+      console.log(d.val());
+    })
+    onValue(ref(db,"users"),(snapshot)=>{
+      console.log(snapshot.val());
+    })
+  } 
+  useEffect(()=>{
+    onAuthStateChanged(auth,(user)=>{
+      if(user){
+        console.log(user);
+      }else{
+        console.log("User not logged in")
+      }
+    })
+  },[])
 
   return (
     <div
@@ -64,6 +83,7 @@ const App = () => {
     >
       App
       <button onClick={putData}>PutData</button>
+      <button onClick={getData}>Get Data</button>
       <h1>SignUp Page</h1>
       <input
         type="text"
@@ -90,7 +110,9 @@ const App = () => {
       <button onClick={signIn}>SignIn</button>
       <br/>
       <button onClick={signInWithGoogle}>Sign in with Google</button>
-      <button>Signup with Google</button>
+      <button onClick={()=>signOut(auth)}>Logout</button>
+      <GoogleFuncs/>
+      <FireStore/>
     </div>
   );
 };
